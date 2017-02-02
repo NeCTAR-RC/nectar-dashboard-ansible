@@ -1,0 +1,2 @@
+[horizon]
+dashboard ansible_ssh_host=130.56.251.89 ansible_ssh_port=22

@@ -1,0 +1,27 @@
+---
+- name: Clone NeCTAR dashboard config and theme
+  git:
+    repo: https://github.com/NeCTAR-RC/nectar-dashboard.git
+    dest: "{{ nectar_dashboard_path }}"
+    version: "{{ nectar_dashboard_version }}"
+    update: no
+
+- name: Install NeCTAR dashboard customisations
+  pip:
+    name: "{{ nectar_dashboard_path }}"
+    state: present
+    virtualenv: "{{ horizon_venv_path }}"
+    virtualenv_site_packages: false
+    editable: true
+    extra_args: >-
+      {{ horizon_developer_mode | ternary('--constraint /opt/developer-pip-constraints.txt', '') }}
+      {{ (pip_install_upper_constraints is defined) | ternary('--constraint ' + pip_install_upper_constraints | default(''),'') }}
+      {{ pip_install_options | default('') }}
+  until: install_packages|success
+  retries: 5
+  delay: 2
+  when:
+    - horizon_venv_enabled | bool
+  notify: Restart apache2
+  tags:
+    - horizon-pip-packages

@@ -1,0 +1,4 @@
+---
+
+horizon_user_ssl_cert: "{{ lookup('file', 'credentials/ssl/nectar-wildcard-certcombined.pem') }}"
+horizon_user_ssl_key: "{{ lookup('file', 'credentials/ssl/nectar-wildcard-key.pem') }}"

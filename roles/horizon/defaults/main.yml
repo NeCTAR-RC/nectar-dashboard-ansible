@@ -1,0 +1,169 @@
+---
+
+## Verbosity Options
+debug: False
+verbose: True
+
+# Name of the virtual env to deploy into
+horizon_venv_path: /opt/horizon
+
+# Set this to enable or disable installing in a venv
+horizon_venv_enabled: true
+
+horizon_developer_mode: True
+horizon_developer_constraints:
+  - 'git+https://github.com/NeCTAR-RC/django_openstack_auth.git@nectar/liberty#egg=openstack_auth'
+  - 'git+https://github.com/NeCTAR-RC/horizon.git@nectar/liberty#egg=horizon'
+  - 'git+https://github.com/openstack/murano-pkg-check.git@47f7379e5e91eac2ba9ede6645cb56ff305d2c0c#egg=murano-pkg-check' # https://bugs.launchpad.net/murano/+bug/1653060
+  - 'git+https://github.com/openstack/murano-dashboard.git@liberty-eol#egg=muranodashboard'
+
+
+## NeCTAR dashboard customisation
+nectar_dashboard_repo: 'https://github.com/NeCTAR-RC/nectar-dashboard.git'
+nectar_dashboard_path: /opt/nectar-dashboard
+nectar_dashboard_version: nectar/liberty
+
+horizon_murano_enabled: True
+horizon_murano_api_url: 'https://murano.test.rc.nectar.org.au:8082'
+horizon_rcshibboleth_url: 'https://accounts.test.rc.nectar.org.au/rcshibboleth'
+
+## System info
+horizon_system_user_name: horizon
+horizon_system_group_name: www-data
+horizon_system_shell: /bin/false
+horizon_system_comment: horizon system user
+horizon_system_user_home: "/var/lib/{{ horizon_system_user_name }}"
+
+## Service Type and Data
+horizon_service_region: RegionOne
+horizon_service_name: horizon
+
+## DB info
+horizon_database_engine: django.db.backends.sqlite3
+horizon_database_name: "{{ horizon_system_user_home }}/dashboard.sqlite3"
+
+## Session configuration
+horizon_session_timeout: 21600  # 6 hours
+
+## Horizon Help URL Path
+horizon_help_url: 'https://support.ehelp.edu.au/'
+
+horizon_endpoint_type: publicURL
+
+## Installation directories
+horizon_bin: "{{ horizon_venv_path }}/bin"
+horizon_venv_lib_dir: "{{ horizon_bin | dirname }}/lib/python2.7/dist-packages"
+horizon_non_venv_lib_dir: "/usr/local/lib/python2.7/dist-packages"
+horizon_lib_dir: "{{ (horizon_venv_enabled | bool) | ternary(horizon_venv_lib_dir, horizon_non_venv_lib_dir) }}"
+horizon_lib_wsgi_file: "{{ horizon_lib_dir }}/openstack_dashboard/wsgi/django.wsgi"
+
+horizon_server_name: "dashboard-custom.dev.rc.nectar.org.au"
+horizon_apache_servertokens: "Prod"
+horizon_apache_serversignature: "Off"
+horizon_log_level: info
+horizon_apache_custom_log_format: combined
+horizon_dropdown_max_items: 30
+horizon_time_zone: "Australia/Melbourne"
+horizon_enforce_password_check: False
+horizon_disable_password_reveal: False
+horizon_enable_password_retrieve: False
+# If nova_libvirt_inject_password is set to True, then this can also be enabled:
+horizon_can_set_password: False
+horizon_enable_cinder_backup: False
+
+# If the following variables are unset in user_variables, the value set will be half the number of available VCPUs
+# horizon_wsgi_processes: 4
+# horizon_wsgi_threads: 4
+
+## Horizon SSL
+horizon_ssl_cert: /etc/ssl/certs/horizon.pem
+horizon_ssl_key: /etc/ssl/private/horizon.key
+horizon_ssl_ca_cert: /etc/ssl/certs/horizon-ca.pem
+
+horizon_ssl_protocol: "ALL -SSLv2 -SSLv3"
+horizon_ssl_cipher_suite: "ECDH+AESGCM:DH+AESGCM:ECDH+AES256:DH+AES256:ECDH+AES128:DH+AES:ECDH+3DES:DH+3DES:RSA+AESGCM:RSA+AES:RSA+3DES:!aNULL:!MD5:!DSS"
+# if using a self-signed certificate, set this to true to regenerate it
+horizon_ssl_self_signed_regen: false
+horizon_ssl_self_signed_subject: "/C=AU/ST=Victoria/L=Melbourne/O=NeCTAR/CN={{ horizon_server_name }}/subjectAltName=IP.1={{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}"
+
+## Horizon's keystone endpoint settings
+horizon_keystone_host: "keystone.test.rc.nectar.org.au"
+horizon_keystone_endpoint: "https://{{ horizon_keystone_host }}:5000/v3"
+
+## Horizon Multi-Domain Support
+# these variables should only be changed if horizon_keystone_endpoint is a Keystone v3 API endpoint
+horizon_keystone_multidomain_support: False
+horizon_keystone_default_domain: Default
+
+### Set the cacert pem for Keystone if you'd like Horizon to verify it.
+# horizon_cacert_pem: /path/to/cacert.pem
+
+## alternatively, you can set horizon to turn off ssl verification for Keystone
+horizon_ssl_no_verify: True
+
+## The role which Horizon should use as a default for users
+horizon_default_role_name: Member
+
+## Horizon secret key
+horizon_secret_key: '{{ lookup("password", "credentials/horizon/secret_key length=32") }}'
+
+## Launch instance
+horizon_launch_instance_legacy: True
+horizon_launch_instance_ng: False
+
+## Neutron features to enable
+horizon_enable_neutron_lbaas: False
+
+## Swift
+horizon_swift_file_transfer_chunk_size: 524288
+
+# For blacklisting certain Nova extensions uncomment this configuration,
+# and add necessary list items.
+# horizon_nova_extensions_blacklist:
+#   - "SimpleTenantUsage"
+
+memcached_servers: '127.0.0.1:11211'
+
+horizon_webroot: /
+
+horizon_listen_ports:
+  - "80"
+  - "443"
+
+# horizon packages that must be installed before anything else
+horizon_requires_apt_packages:
+  - build-essential
+  - python-dev
+
+horizon_apt_packages:
+  - apache2
+  - apache2-utils
+  - libapache2-mod-wsgi
+  - libssl-dev
+  - libxslt1.1
+  - openssl
+  - libsqlite3-dev
+  - git
+
+# horizon packages that must be installed before anything else
+horizon_requires_pip_packages:
+  - virtualenv
+  - virtualenv-tools
+  - python-keystoneclient # Keystoneclient needed to OSA keystone lib
+  - httplib2
+
+horizon_pip_packages:
+  - django-appconf
+  - greenlet
+  - 'git+https://github.com/NeCTAR-RC/django_openstack_auth.git@nectar/liberty#egg=openstack_auth'
+  - 'git+https://github.com/NeCTAR-RC/horizon.git@nectar/liberty#egg=horizon'
+  - keystonemiddleware
+  - PyMySQL
+  - pysqlite
+  - ply
+  - pycrypto
+  - python-memcached
+  - 'git+https://github.com/openstack/murano-pkg-check.git@47f7379e5e91eac2ba9ede6645cb56ff305d2c0c#egg=murano-pkg-check' # https://bugs.launchpad.net/murano/+bug/1653060
+  - 'git+https://github.com/openstack/murano-dashboard.git@liberty-eol#egg=muranodashboard'
+
+

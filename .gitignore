@@ -1,0 +1,5 @@
+credentials/*
+!credentials/.keep
+*.retry
+*.log
+*.swp
